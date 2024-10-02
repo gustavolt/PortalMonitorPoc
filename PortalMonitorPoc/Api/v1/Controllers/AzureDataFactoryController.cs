@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PortalMonitorPoc.Api.v1.Interfaces;
+using PortalMonitorPoc.Api.v1.Models;
 
 namespace PortalMonitorPoc.Api.v1.Controllers
 {
@@ -21,11 +22,25 @@ namespace PortalMonitorPoc.Api.v1.Controllers
             return Ok(factories);
         }
 
-        [HttpGet("factories/{factoryName}/pipelines")]
-        public async Task<IActionResult> GetPipelineRuns(string factoryName)
+        [HttpPost("factories/{factoryName}/pipelines")]
+        public async Task<IActionResult> GetPipelineRuns(
+         string factoryName,
+         [FromBody] PipelineRunQueryParameters queryParameters)
         {
-            var pipelines = await _azureDataFactoryService.GetPipelineRunsAsync(factoryName);
+            if (queryParameters == null || queryParameters.Filters == null)
+            {
+                return BadRequest("Parâmetros de consulta inválidos.");
+            }
+
+            var pipelines = await _azureDataFactoryService.GetPipelineRunsAsync(
+                factoryName,
+                queryParameters.LastUpdatedAfter,
+                queryParameters.LastUpdatedBefore,
+                queryParameters.Filters
+            );
+
             return Ok(pipelines);
         }
     }
 }
+
